@@ -43,6 +43,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\CoachDashboardController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\ReviewController;
 
 /*
 |--------------------------------------------------------------------------
@@ -92,6 +93,8 @@ Route::prefix('v1')->group(function () {
     // Services (Public)
     Route::get('/coaches/{coach_id}/services', [ServiceController::class, 'index']);
     Route::get('/services/{service}', [ServiceController::class, 'show']);
+    Route::get('/coaches/{coach_id}/reviews', [ReviewController::class, 'index']);
+
 
 
     // Authenticated routes
@@ -409,6 +412,11 @@ Route::prefix('v1')->group(function () {
         Route::post('bookings/intent', [PaymentController::class, 'createPaymentIntent']);
         Route::post('bookings/confirm', [PaymentController::class, 'confirmBooking']);
         Route::get('bookings', [PaymentController::class, 'index']);
+        Route::put('bookings/{id}/cancel', [PaymentController::class, 'cancel']);
+
+        // Reviews
+        Route::post('reviews', [ReviewController::class, 'store']); // Create review
+
 
         // Chat routes with professional access
         Route::middleware(['professional.access'])->group(function () {

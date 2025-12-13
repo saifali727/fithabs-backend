@@ -129,4 +129,33 @@ class PaymentController extends Controller
         $bookings = $query->orderBy('created_at', 'desc')->paginate(10);
         return response()->json($bookings);
     }
+
+    public function cancel(Request $request, $id)
+    {
+        $user = $request->user();
+        $booking = Booking::findOrFail($id);
+
+        // Authorization: User who made it OR Coach receiving it can cancel
+
+        $isAuthorized = false;
+        if ($user instanceof \App\Models\User && $booking->user_id === $user->id) {
+            $isAuthorized = true;
+        } elseif ($user instanceof \App\Models\Coach && $booking->coach_id === $user->id) {
+            $isAuthorized = true;
+        }
+
+        if (!$isAuthorized) {
+            return response()->json(['error' => 'Unauthorized actions'], 403);
+        }
+
+        if ($booking->status === 'cancelled') {
+            return response()->json(['message' => 'Booking is already cancelled'], 400);
+        }
+
+        // Logic for refund could go here (e.g., Stripe Refund API)
+
+        $booking->update(['status' => 'cancelled']);
+
+        return response()->json(['message' => 'Booking cancelled successfully', 'data' => $booking]);
+    }
 }

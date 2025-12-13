@@ -42,4 +42,14 @@ class Coach extends Authenticatable
     {
         return $this->hasMany(Booking::class);
     }
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
+    }
+
+    public function averageRating()
+    {
+        return $this->reviews()->avg('rating');
+    }
 }
