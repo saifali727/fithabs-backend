@@ -1,599 +1,1583 @@
 {
-  "info": {
-    "name": "FitHabs API Collection",
-    "description": "Complete API collection for FitHabs fitness application. Includes Auth, User Profiles, Workouts, Recipes, Meal Plans, Education, Daily Activities, and Coach Services/Booking System.",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-  },
-  "variable": [
-    {
-      "key": "baseUrl",
-      "value": "http://127.0.0.1:8000/api/v1",
-      "type": "string"
+    "info": {
+        "_postman_id": "fithabs-api-2024",
+        "name": "FitHabs API Collection",
+        "description": "Complete API collection for FitHabs Backend - Fitness & Health Application",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
     },
-    {
-      "key": "authToken",
-      "value": "",
-      "type": "string"
-    }
-  ],
-  "auth": {
-    "type": "bearer",
-    "bearer": [
-      {
-        "key": "token",
-        "value": "{{authToken}}",
-        "type": "string"
-      }
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:8000/api/v1",
+            "type": "string"
+        },
+        {
+            "key": "auth_token",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "admin_token",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "coach_token",
+            "value": "",
+            "type": "string"
+        }
+    ],
+    "auth": {
+        "type": "bearer",
+        "bearer": [
+            {
+                "key": "token",
+                "value": "{{auth_token}}",
+                "type": "string"
+            }
+        ]
+    },
+    "event": [
+        {
+            "listen": "prerequest",
+            "script": {
+                "type": "text/javascript",
+                "exec": [
+                    ""
+                ]
+            }
+        },
+        {
+            "listen": "test",
+            "script": {
+                "type": "text/javascript",
+                "exec": [
+                    "if (pm.response.code === 200 || pm.response.code === 201) {",
+                    "    var jsonData = pm.response.json();",
+                    "    if (jsonData.token) {",
+                    "        pm.collectionVariables.set('auth_token', jsonData.token);",
+                    "    }",
+                    "}"
+                ]
+            }
+        }
+    ],
+    "item": [
+        {
+            "name": "🔐 Authentication",
+            "item": [
+                {
+                    "name": "Register User",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\",\n  \"password_confirmation\": \"password123\"\n}"
+                        },
+                        "url": "{{base_url}}/register"
+                    }
+                },
+                {
+                    "name": "Login User",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    pm.collectionVariables.set('auth_token', jsonData.token);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\"\n}"
+                        },
+                        "url": "{{base_url}}/login"
+                    }
+                },
+                {
+                    "name": "Admin Login",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    pm.collectionVariables.set('admin_token', jsonData.token);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"admin@fithabs.com\",\n  \"password\": \"admin123\"\n}"
+                        },
+                        "url": "{{base_url}}/admin-login"
+                    }
+                },
+                {
+                    "name": "Google Login",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"token\": \"google_oauth_token_here\"\n}"
+                        },
+                        "url": "{{base_url}}/login/google"
+                    }
+                },
+                {
+                    "name": "Apple Login",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"token\": \"apple_oauth_token_here\"\n}"
+                        },
+                        "url": "{{base_url}}/login/apple"
+                    }
+                },
+                {
+                    "name": "Forgot Password",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"john@example.com\"\n}"
+                        },
+                        "url": "{{base_url}}/forgot-password"
+                    }
+                },
+                {
+                    "name": "Reset Password",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"john@example.com\",\n  \"token\": \"reset_token_here\",\n  \"password\": \"newpassword123\",\n  \"password_confirmation\": \"newpassword123\"\n}"
+                        },
+                        "url": "{{base_url}}/reset-password"
+                    }
+                },
+                {
+                    "name": "Get Current User",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/me"
+                    }
+                },
+                {
+                    "name": "Logout",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{base_url}}/logout"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "👤 Profile Management",
+            "item": [
+                {
+                    "name": "Get Profile",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/profile"
+                    }
+                },
+                {
+                    "name": "Update Full Profile",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"John Updated\",\n  \"age\": 28,\n  \"gender\": \"male\",\n  \"weight\": 75,\n  \"weight_unit\": \"kg\",\n  \"height\": 180,\n  \"height_unit\": \"cm\",\n  \"goal\": \"build_muscle\",\n  \"activity_level\": \"moderate\",\n  \"daily_calorie_goal\": 2500,\n  \"daily_steps_goal\": 10000,\n  \"daily_water_goal\": 3\n}"
+                        },
+                        "url": "{{base_url}}/profile"
+                    }
+                },
+                {
+                    "name": "Update Basic Profile",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"age\": 28,\n  \"phone\": \"+1234567890\"\n}"
+                        },
+                        "url": "{{base_url}}/profile/basic"
+                    }
+                },
+                {
+                    "name": "Update Password",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"password\": \"newpassword123\",\n  \"password_confirmation\": \"newpassword123\"\n}"
+                        },
+                        "url": "{{base_url}}/profile/password"
+                    }
+                },
+                {
+                    "name": "Update Physical Profile",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"gender\": \"male\",\n  \"weight\": 75,\n  \"weight_unit\": \"kg\",\n  \"height\": 180,\n  \"height_unit\": \"cm\"\n}"
+                        },
+                        "url": "{{base_url}}/profile/physical"
+                    }
+                },
+                {
+                    "name": "Update Goals",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"goal\": \"build_muscle\",\n  \"activity_level\": \"very_active\"\n}"
+                        },
+                        "url": "{{base_url}}/profile/goals"
+                    }
+                },
+                {
+                    "name": "Update Daily Targets",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"daily_calorie_goal\": 2500,\n  \"daily_steps_goal\": 10000,\n  \"daily_water_goal\": 3\n}"
+                        },
+                        "url": "{{base_url}}/profile/targets"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "🏠 Home & Public",
+            "item": [
+                {
+                    "name": "Get Home Screen",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/home",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    }
+                },
+                {
+                    "name": "Test API",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/test",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "🏋️ Workouts",
+            "item": [
+                {
+                    "name": "Get All Workouts",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/workouts"
+                    }
+                },
+                {
+                    "name": "Get Workout Details",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/workouts/1"
+                    }
+                },
+                {
+                    "name": "Filter Workouts",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/workouts/filter?difficulty=beginner&type=strength",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "workouts",
+                                "filter"
+                            ],
+                            "query": [
+                                {
+                                    "key": "difficulty",
+                                    "value": "beginner"
+                                },
+                                {
+                                    "key": "type",
+                                    "value": "strength"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Workouts by Difficulty",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/workouts/difficulty/beginner"
+                    }
+                },
+                {
+                    "name": "Start Workout Session",
+                    "request": {
+                        "method": "POST",
+                        "url": "{{base_url}}/workouts/1/start"
+                    }
+                },
+                {
+                    "name": "Complete Workout Session",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"calories_burned\": 350,\n  \"notes\": \"Great workout!\"\n}"
+                        },
+                        "url": "{{base_url}}/workout-sessions/1/complete"
+                    }
+                },
+                {
+                    "name": "Get Workout Exercises",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/workouts/1/exercises"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "💪 Exercises",
+            "item": [
+                {
+                    "name": "Get All Exercises",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/exercises"
+                    }
+                },
+                {
+                    "name": "Get Exercise Details",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/exercises/1"
+                    }
+                },
+                {
+                    "name": "Create Exercise",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Push Ups\",\n  \"description\": \"Classic push-up exercise\",\n  \"muscle_group\": \"chest\",\n  \"equipment\": \"none\",\n  \"difficulty\": \"beginner\",\n  \"instructions\": \"Start in plank position...\",\n  \"sets\": 3,\n  \"reps\": 15\n}"
+                        },
+                        "url": "{{base_url}}/exercises"
+                    }
+                },
+                {
+                    "name": "Update Exercise Progress",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"completed_sets\": 3,\n  \"completed_reps\": 15\n}"
+                        },
+                        "url": "{{base_url}}/workout-sessions/1/exercises/1/progress"
+                    }
+                },
+                {
+                    "name": "Get Next Exercise",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/workouts/1/exercises/next/1"
+                    }
+                },
+                {
+                    "name": "Get Previous Exercise",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/workouts/1/exercises/previous/2"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "📊 User Workouts",
+            "item": [
+                {
+                    "name": "Get User Workouts",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/user-workouts"
+                    }
+                },
+                {
+                    "name": "Get Workout Stats",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/user-workouts/stats"
+                    }
+                },
+                {
+                    "name": "Get Active Sessions",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/user-workouts/active"
+                    }
+                },
+                {
+                    "name": "Get Workout History",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/user-workouts/history"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "🥗 Recipes",
+            "item": [
+                {
+                    "name": "Get All Recipes",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/recipes"
+                    }
+                },
+                {
+                    "name": "Get Recipe Details",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/recipes/1"
+                    }
+                },
+                {
+                    "name": "Search Recipes",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/recipes/search?q=chicken&meal_type=lunch",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "recipes",
+                                "search"
+                            ],
+                            "query": [
+                                {
+                                    "key": "q",
+                                    "value": "chicken"
+                                },
+                                {
+                                    "key": "meal_type",
+                                    "value": "lunch"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Recipe of the Day",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/recipes/recipe-of-the-day"
+                    }
+                },
+                {
+                    "name": "Get Recommendations",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/recipes/recommendations"
+                    }
+                },
+                {
+                    "name": "Nutrition Screen",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/recipes/nutrition-screen"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "🍽️ Meal Plans",
+            "item": [
+                {
+                    "name": "Get All Meal Plans",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/meal-plans"
+                    }
+                },
+                {
+                    "name": "Get Meal Plan Details",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/meal-plans/1"
+                    }
+                },
+                {
+                    "name": "Filter Meal Plans",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/meal-plans/filter?goal=lose_weight&difficulty=easy",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "meal-plans",
+                                "filter"
+                            ],
+                            "query": [
+                                {
+                                    "key": "goal",
+                                    "value": "lose_weight"
+                                },
+                                {
+                                    "key": "difficulty",
+                                    "value": "easy"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Personalized Meal Plans",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/meal-plans/personalized"
+                    }
+                },
+                {
+                    "name": "Get By Meal Type",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/meal-plans/meal-type/breakfast"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "📅 User Meal Plans",
+            "item": [
+                {
+                    "name": "Get User Meal Plans",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/user-meal-plans"
+                    }
+                },
+                {
+                    "name": "Get Current Meal Plan",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/user-meal-plans/current"
+                    }
+                },
+                {
+                    "name": "Get Meal Plan By Date",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/user-meal-plans/date/2024-01-15"
+                    }
+                },
+                {
+                    "name": "Assign Meal Plan",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"meal_plan_id\": 1,\n  \"start_date\": \"2024-01-15\"\n}"
+                        },
+                        "url": "{{base_url}}/user-meal-plans"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "📈 Daily Activities",
+            "item": [
+                {
+                    "name": "Get Progress Summary",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/daily-activities/progress-summary"
+                    }
+                },
+                {
+                    "name": "Update Daily Activity",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"steps\": 8500,\n  \"calories_burned\": 450,\n  \"water_intake\": 2.5,\n  \"sleep_hours\": 7.5\n}"
+                        },
+                        "url": "{{base_url}}/daily-activities/update"
+                    }
+                },
+                {
+                    "name": "Get Date Range Activities",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/daily-activities/date-range?start_date=2024-01-01&end_date=2024-01-31",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "daily-activities",
+                                "date-range"
+                            ],
+                            "query": [
+                                {
+                                    "key": "start_date",
+                                    "value": "2024-01-01"
+                                },
+                                {
+                                    "key": "end_date",
+                                    "value": "2024-01-31"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get All Daily Activities",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/daily-activities"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "🎯 User Progress",
+            "item": [
+                {
+                    "name": "Get User Progress",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/user-progress"
+                    }
+                },
+                {
+                    "name": "Create Progress Entry",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"weight\": 74.5,\n  \"body_fat_percentage\": 18.5,\n  \"notes\": \"Feeling great!\"\n}"
+                        },
+                        "url": "{{base_url}}/user-progress"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "🎓 Education Content",
+            "item": [
+                {
+                    "name": "Get All Education Content",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/education-contents"
+                    }
+                },
+                {
+                    "name": "Get Content Details",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/education-contents/1"
+                    }
+                },
+                {
+                    "name": "Search Content",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/education-contents/search?q=nutrition",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "education-contents",
+                                "search"
+                            ],
+                            "query": [
+                                {
+                                    "key": "q",
+                                    "value": "nutrition"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "🏆 Coaches (Public)",
+            "item": [
+                {
+                    "name": "Get All Coaches",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/coaches",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    }
+                },
+                {
+                    "name": "Get Coach Services",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/coaches/1/services",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    }
+                },
+                {
+                    "name": "Get Coach Reviews",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/coaches/1/reviews",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    }
+                },
+                {
+                    "name": "Get Service Details",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/services/1",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "🏥 Clinics & Therapists",
+            "item": [
+                {
+                    "name": "Get All Clinics",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/clinics",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    }
+                },
+                {
+                    "name": "Get All Therapists",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/therapists",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "📅 Bookings & Payments",
+            "item": [
+                {
+                    "name": "Create Payment Intent",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"service_id\": 1,\n  \"booked_for\": \"2024-12-20T10:00:00Z\"\n}"
+                        },
+                        "url": "{{base_url}}/bookings/intent"
+                    }
+                },
+                {
+                    "name": "Confirm Booking",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"payment_intent_id\": \"pi_xxxxxxxxxxxxx\"\n}"
+                        },
+                        "url": "{{base_url}}/bookings/confirm"
+                    }
+                },
+                {
+                    "name": "Get My Bookings",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/bookings"
+                    }
+                },
+                {
+                    "name": "Cancel Booking",
+                    "request": {
+                        "method": "PUT",
+                        "url": "{{base_url}}/bookings/1/cancel"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "⭐ Reviews",
+            "item": [
+                {
+                    "name": "Submit Review",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"coach_id\": 1,\n  \"rating\": 5,\n  \"comment\": \"Excellent coach! Highly recommend.\",\n  \"booking_id\": 1\n}"
+                        },
+                        "url": "{{base_url}}/reviews"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "🤖 AI Chat",
+            "item": [
+                {
+                    "name": "Get All AI Chats",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/ai-chats"
+                    }
+                },
+                {
+                    "name": "Create New Chat",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"title\": \"Fitness Questions\"\n}"
+                        },
+                        "url": "{{base_url}}/ai-chats"
+                    }
+                },
+                {
+                    "name": "Get Chat Details",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/ai-chats/1"
+                    }
+                },
+                {
+                    "name": "Send Message to AI",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"message\": \"What are the best exercises for building muscle?\"\n}"
+                        },
+                        "url": "{{base_url}}/ai-chats/1/send"
+                    }
+                },
+                {
+                    "name": "Delete Chat",
+                    "request": {
+                        "method": "DELETE",
+                        "url": "{{base_url}}/ai-chats/1"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "💬 User Chats",
+            "item": [
+                {
+                    "name": "Get All Chats",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/chats"
+                    }
+                },
+                {
+                    "name": "Create Chat",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"participant_id\": 1,\n  \"participant_type\": \"coach\"\n}"
+                        },
+                        "url": "{{base_url}}/chats"
+                    }
+                },
+                {
+                    "name": "Get Chat Messages",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/chat-messages"
+                    }
+                },
+                {
+                    "name": "Send Chat Message",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"chat_id\": 1,\n  \"message\": \"Hello!\"\n}"
+                        },
+                        "url": "{{base_url}}/chat-messages"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "❤️ Favorites",
+            "item": [
+                {
+                    "name": "Get All Favorites",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/user-favorites"
+                    }
+                },
+                {
+                    "name": "Add Favorite",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"favoriteable_id\": 1,\n  \"favoriteable_type\": \"workout\"\n}"
+                        },
+                        "url": "{{base_url}}/user-favorites"
+                    }
+                },
+                {
+                    "name": "Remove Favorite",
+                    "request": {
+                        "method": "DELETE",
+                        "url": "{{base_url}}/user-favorites/1"
+                    }
+                },
+                {
+                    "name": "Remove By Item",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"favoriteable_id\": 1,\n  \"favoriteable_type\": \"workout\"\n}"
+                        },
+                        "url": "{{base_url}}/user-favorites/remove-by-item"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "🔔 Notifications",
+            "item": [
+                {
+                    "name": "Get Notifications",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/notifications"
+                    }
+                },
+                {
+                    "name": "Mark as Read",
+                    "request": {
+                        "method": "PUT",
+                        "url": "{{base_url}}/notifications/1"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "⚙️ User Settings",
+            "item": [
+                {
+                    "name": "Get Settings",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/user-settings"
+                    }
+                },
+                {
+                    "name": "Update Settings",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"notifications_enabled\": true,\n  \"dark_mode\": false,\n  \"language\": \"en\"\n}"
+                        },
+                        "url": "{{base_url}}/user-settings/1"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "🎮 User Preferences & Goals",
+            "item": [
+                {
+                    "name": "Get Preferences",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/user-preferences/1"
+                    }
+                },
+                {
+                    "name": "Update Preferences",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"dietary_restrictions\": [\"vegetarian\"],\n  \"workout_preferences\": [\"strength\", \"cardio\"]\n}"
+                        },
+                        "url": "{{base_url}}/user-preferences/1"
+                    }
+                },
+                {
+                    "name": "Get Goals",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/user-goals/1"
+                    }
+                },
+                {
+                    "name": "Create Goal",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"type\": \"weight_loss\",\n  \"target_value\": 70,\n  \"target_date\": \"2024-06-01\"\n}"
+                        },
+                        "url": "{{base_url}}/user-goals"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "🏅 Achievements",
+            "item": [
+                {
+                    "name": "Get Achievements",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/user-achievements"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "🎬 Media (Videos & Images)",
+            "item": [
+                {
+                    "name": "Get Videos",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/videos"
+                    }
+                },
+                {
+                    "name": "Get Video Details",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/videos/1"
+                    }
+                },
+                {
+                    "name": "Stream Video",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/videos/1/stream"
+                    }
+                },
+                {
+                    "name": "Get Images",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/images"
+                    }
+                },
+                {
+                    "name": "Serve Image",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/images/1/serve"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "🔍 Search",
+            "item": [
+                {
+                    "name": "Get Search Logs",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/search-logs"
+                    }
+                },
+                {
+                    "name": "Recent Searches",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/search-logs/recent"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "👨‍🏫 Coach Dashboard",
+            "description": "Requires coach authentication",
+            "auth": {
+                "type": "bearer",
+                "bearer": [
+                    {
+                        "key": "token",
+                        "value": "{{coach_token}}",
+                        "type": "string"
+                    }
+                ]
+            },
+            "item": [
+                {
+                    "name": "Get Dashboard Stats",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/coach/dashboard/stats"
+                    }
+                },
+                {
+                    "name": "Get Clients",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/coach/clients"
+                    }
+                },
+                {
+                    "name": "Get Invoices",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/coach/invoices"
+                    }
+                },
+                {
+                    "name": "Get My Services",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/services/me"
+                    }
+                },
+                {
+                    "name": "Create Service",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"title\": \"Personal Training Session\",\n  \"description\": \"1-on-1 personal training\",\n  \"price\": 75.00,\n  \"duration_minutes\": 60,\n  \"is_active\": true\n}"
+                        },
+                        "url": "{{base_url}}/services"
+                    }
+                },
+                {
+                    "name": "Update Service",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"title\": \"Premium Training Session\",\n  \"price\": 100.00\n}"
+                        },
+                        "url": "{{base_url}}/services/1"
+                    }
+                },
+                {
+                    "name": "Delete Service",
+                    "request": {
+                        "method": "DELETE",
+                        "url": "{{base_url}}/services/1"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "🔧 Admin",
+            "description": "Requires admin authentication",
+            "auth": {
+                "type": "bearer",
+                "bearer": [
+                    {
+                        "key": "token",
+                        "value": "{{admin_token}}",
+                        "type": "string"
+                    }
+                ]
+            },
+            "item": [
+                {
+                    "name": "Admin Check",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/admin-check"
+                    }
+                },
+                {
+                    "name": "Get Dashboard",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/dashboard"
+                    }
+                },
+                {
+                    "name": "Get Admin Users",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/admin-users"
+                    }
+                },
+                {
+                    "name": "Get All Users",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/users"
+                    }
+                },
+                {
+                    "name": "Create Workout (Admin)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Full Body Blast\",\n  \"description\": \"Complete full body workout\",\n  \"difficulty\": \"intermediate\",\n  \"duration_minutes\": 45,\n  \"calories_burn\": 400,\n  \"type\": \"strength\"\n}"
+                        },
+                        "url": "{{base_url}}/workouts"
+                    }
+                },
+                {
+                    "name": "Create Recipe (Admin)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Protein Bowl\",\n  \"description\": \"High protein lunch bowl\",\n  \"meal_type\": \"lunch\",\n  \"prep_time\": 15,\n  \"cook_time\": 20,\n  \"calories\": 450,\n  \"protein\": 35,\n  \"carbs\": 40,\n  \"fat\": 15\n}"
+                        },
+                        "url": "{{base_url}}/recipes"
+                    }
+                },
+                {
+                    "name": "Get Admin Coaches",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/admin/coaches"
+                    }
+                },
+                {
+                    "name": "Create Coach (Admin)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Coach Mike\",\n  \"email\": \"mike@fithabs.com\",\n  \"password\": \"password123\",\n  \"specialty\": \"Strength Training\",\n  \"bio\": \"10 years experience\"\n}"
+                        },
+                        "url": "{{base_url}}/admin/coaches"
+                    }
+                },
+                {
+                    "name": "Get Admin Clinics",
+                    "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/admin/clinics"
+                    }
+                },
+                {
+                    "name": "Create Clinic (Admin)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"FitHabs Wellness Center\",\n  \"address\": \"123 Health St\",\n  \"phone\": \"+1234567890\",\n  \"email\": \"clinic@fithabs.com\"\n}"
+                        },
+                        "url": "{{base_url}}/admin/clinics"
+                    }
+                },
+                {
+                    "name": "Create Meal Plan (Admin)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Weight Loss Plan\",\n  \"description\": \"7-day weight loss meal plan\",\n  \"goal\": \"lose_weight\",\n  \"calories_per_day\": 1500,\n  \"duration_days\": 7\n}"
+                        },
+                        "url": "{{base_url}}/meal-plans"
+                    }
+                },
+                {
+                    "name": "Create Education Content (Admin)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"title\": \"Benefits of HIIT\",\n  \"content\": \"High-Intensity Interval Training...\",\n  \"category\": \"fitness\",\n  \"type\": \"article\"\n}"
+                        },
+                        "url": "{{base_url}}/education-contents"
+                    }
+                }
+            ]
+        }
     ]
-  },
-  "item": [
-    {
-      "name": "1. Authentication",
-      "item": [
-        {
-          "name": "User Registration",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "var jsonData = pm.response.json();",
-                  "if(jsonData.access_token) {",
-                  "    pm.environment.set(\"authToken\", jsonData.access_token);",
-                  "    pm.globals.set(\"authToken\", jsonData.access_token);",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\",\n  \"gender\": \"male\",\n  \"weight\": 70,\n  \"weight_unit\": \"kg\",\n  \"height\": 175,\n  \"height_unit\": \"cm\",\n  \"goal\": \"lose_weight\",\n  \"activity_level\": \"moderate\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/register",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "register"
-              ]
-            }
-          }
-        },
-        {
-          "name": "User Login",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "var jsonData = pm.response.json();",
-                  "if(jsonData.access_token) {",
-                  "    pm.environment.set(\"authToken\", jsonData.access_token);",
-                  "    pm.globals.set(\"authToken\", jsonData.access_token);",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/login",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "login"
-              ]
-            }
-          }
-        },
-        {
-          "name": "Admin Login",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"admin123\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/admin-login",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "admin-login"
-              ]
-            }
-          }
-        },
-        {
-          "name": "Coach Login",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "var jsonData = pm.response.json();",
-                  "if(jsonData.access_token) {",
-                  "    pm.environment.set(\"coachToken\", jsonData.access_token);",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"email\": \"coach@example.com\",\n    \"password\": \"password\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{baseUrl}}/login",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "login"
-              ]
-            }
-          }
-        },
-        {
-          "name": "Forgot Password",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"john@example.com\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/forgot-password",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "forgot-password"
-              ]
-            }
-          }
-        },
-        {
-          "name": "Reset Password",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"token\": \"reset_token_here\",\n  \"email\": \"john@example.com\",\n  \"password\": \"newpassword123\",\n  \"password_confirmation\": \"newpassword123\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/reset-password",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "reset-password"
-              ]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "2. Public Data",
-      "item": [
-        {
-          "name": "Get All Workouts",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/workouts",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "workouts"
-              ]
-            }
-          }
-        },
-        {
-          "name": "Get All Recipes",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/recipes",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "recipes"
-              ]
-            }
-          }
-        },
-        {
-          "name": "Get All Meal Plans",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/meal-plans",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "meal-plans"
-              ]
-            }
-          }
-        },
-        {
-          "name": "Get All Education Content",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/education-contents",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "education-contents"
-              ]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "3. User Profile & Activities",
-      "item": [
-        {
-          "name": "Get User Profile",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/me",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "me"
-              ]
-            }
-          }
-        },
-        {
-          "name": "Update User Profile",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Jane Smith\",\n  \"goal\": \"maintain_weight\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/profile",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "profile"
-              ]
-            }
-          }
-        },
-        {
-          "name": "Create Daily Activity",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"date\": \"2025-08-28\",\n  \"steps\": 8500,\n  \"calories_burned\": 450,\n  \"water_intake\": 2.5,\n  \"sleep_hours\": 7.5,\n  \"mood\": \"good\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/daily-activities",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "daily-activities"
-              ]
-            }
-          }
-        },
-        {
-          "name": "Get User Workouts",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/user-workouts",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "user-workouts"
-              ]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "4. Coach Services & Booking",
-      "item": [
-        {
-          "name": "Public: Get Coaches",
-          "request": {
-            "method": "GET",
-            "url": "{{baseUrl}}/coaches"
-          }
-        },
-        {
-          "name": "Public: Get Coach Services",
-          "request": {
-            "method": "GET",
-            "url": "{{baseUrl}}/coaches/1/services"
-          }
-        },
-        {
-          "name": "Create Service (Coach Only)",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{coachToken}}"
-                }
-              ]
-            },
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"title\": \"1-on-1 Fitness Session\",\n    \"description\": \"One hour personal training call.\",\n    \"price\": 50.00,\n    \"duration_minutes\": 60,\n    \"is_active\": true\n}"
-            },
-            "url": "{{baseUrl}}/services"
-          }
-        },
-        {
-          "name": "Get My Services (Coach Only)",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{coachToken}}"
-                }
-              ]
-            },
-            "method": "GET",
-            "url": "{{baseUrl}}/services/me"
-          }
-        },
-        {
-          "name": "Book Service (Intent)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"service_id\": 1,\n    \"booked_for\": \"2025-12-25T10:00:00\"\n}"
-            },
-            "url": "{{baseUrl}}/bookings/intent"
-          }
-        },
-        {
-          "name": "Confirm Booking",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"payment_intent_id\": \"pi_test_123\"\n}"
-            },
-            "url": "{{baseUrl}}/bookings/confirm"
-          }
-        },
-        {
-          "name": "Cancel Booking",
-          "request": {
-            "method": "PUT",
-            "url": "{{baseUrl}}/bookings/1/cancel"
-          }
-        },
-        {
-          "name": "Get My Bookings",
-          "request": {
-            "method": "GET",
-            "url": "{{baseUrl}}/bookings"
-          }
-        }
-      ]
-    },
-    {
-      "name": "5. Coach Dashboard",
-      "item": [
-        {
-          "name": "Get Stats",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{coachToken}}"
-                }
-              ]
-            },
-            "method": "GET",
-            "url": "{{baseUrl}}/coach/dashboard/stats"
-          }
-        },
-        {
-          "name": "Get Clients",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{coachToken}}"
-                }
-              ]
-            },
-            "method": "GET",
-            "url": "{{baseUrl}}/coach/clients"
-          }
-        },
-        {
-          "name": "Get Invoices",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{coachToken}}"
-                }
-              ]
-            },
-            "method": "GET",
-            "url": "{{baseUrl}}/coach/invoices"
-          }
-        }
-      ]
-    },
-    {
-      "name": "6. Reviews",
-      "item": [
-        {
-          "name": "Add Review",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"coach_id\": 1,\n    \"rating\": 5,\n    \"comment\": \"Great coach!\",\n    \"booking_id\": 1\n}"
-            },
-            "url": "{{baseUrl}}/reviews"
-          }
-        },
-        {
-          "name": "Get Coach Reviews",
-          "request": {
-            "method": "GET",
-            "url": "{{baseUrl}}/coaches/1/reviews"
-          }
-        }
-      ]
-    },
-    {
-      "name": "7. Admin Content Management",
-      "item": [
-        {
-          "name": "Create Workout",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Morning Cardio\",\n  \"description\": \"High-intensity cardio workout for morning energy boost\",\n  \"difficulty\": \"intermediate\",\n  \"type\": \"cardio\",\n  \"duration_minutes\": 30,\n  \"calories_per_session\": 300,\n  \"equipment_needed\": [\"treadmill\", \"dumbbells\"],\n  \"tags\": [\"morning\", \"cardio\", \"energy\"],\n  \"is_featured\": true,\n  \"is_active\": true,\n  \"created_by_admin\": 1\n}"
-            },
-            "url": "{{baseUrl}}/workouts"
-          }
-        }
-      ]
-    }
-  ]
 }
