@@ -37,16 +37,31 @@ class ServiceController extends Controller
     }
 
     /**
+     * Display a listing of services for the authenticated coach.
+     */
+    public function myServices(Request $request)
+    {
+        $user = $request->user();
+
+        // Ensure the user has a services relationship
+        if (!method_exists($user, 'services')) {
+            return response()->json(['error' => 'Unauthorized. Only coaches can access this.'], 403);
+        }
+
+        $services = $user->services()->orderBy('created_at', 'desc')->get();
+        return response()->json(['data' => $services]);
+    }
+
+    /**
      * Store a newly created service.
      */
     public function store(Request $request)
     {
-        // Assuming the authenticated user is the coach or admin
-        // For now, let's assume we pass coach_id or it's implied from auth user if they are a coach
-        // But since Auth logic for Coach vs User varies, I'll check if user has coach profile or pass strictly.
+        $user = $request->user();
+        $isCoach = $user instanceof Coach || method_exists($user, 'services'); // Check for services relationship
 
         $validator = Validator::make($request->all(), [
-            'coach_id' => 'required|exists:coaches,id',
+            'coach_id' => $isCoach ? 'nullable|exists:coaches,id' : 'required|exists:coaches,id',
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
@@ -58,7 +73,14 @@ class ServiceController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $service = Service::create($request->all());
+        $data = $request->all();
+
+        // If authenticated user is a coach and no coach_id provided, default to self
+        if (!isset($data['coach_id']) && $isCoach) {
+            $data['coach_id'] = $user->id;
+        }
+
+        $service = Service::create($data);
 
         return response()->json([
             'message' => 'Service created successfully',

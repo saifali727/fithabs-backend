@@ -414,6 +414,7 @@ Route::prefix('v1')->group(function () {
             Route::apiResource('chats', ChatController::class);
             Route::apiResource('chat-messages', ChatMessageController::class)->middleware('throttle:100,1');
             // Professionals manage their services
+            Route::get('services/me', [ServiceController::class, 'myServices']);
             Route::apiResource('services', ServiceController::class)->except(['index', 'show']);
         });
 

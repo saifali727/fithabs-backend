@@ -112,7 +112,21 @@ class PaymentController extends Controller
 
     public function index(Request $request)
     {
-        $bookings = $request->user()->bookings()->with(['coach', 'service'])->orderBy('created_at', 'desc')->paginate(10);
+        $user = $request->user();
+        $query = $user->bookings();
+
+        // If user is a typical User, show coach details.
+        // If user is a Coach, show user (client) details.
+        if ($user instanceof \App\Models\User) {
+            $query->with(['coach', 'service']);
+        } elseif ($user instanceof \App\Models\Coach) {
+            $query->with(['user', 'service']);
+        } else {
+            // Fallback for other types
+            $query->with(['coach', 'service']);
+        }
+
+        $bookings = $query->orderBy('created_at', 'desc')->paginate(10);
         return response()->json($bookings);
     }
 }
