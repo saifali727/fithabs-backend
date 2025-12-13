@@ -40,6 +40,7 @@ use App\Http\Controllers\UserPreferenceController;
 use App\Http\Controllers\UserGoalController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\CoachDashboardController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\PaymentController;
 
@@ -416,6 +417,11 @@ Route::prefix('v1')->group(function () {
             // Professionals manage their services
             Route::get('services/me', [ServiceController::class, 'myServices']);
             Route::apiResource('services', ServiceController::class)->except(['index', 'show']);
+
+            // Coach Dashboard & Analytics
+            Route::get('coach/dashboard/stats', [CoachDashboardController::class, 'getStats']);
+            Route::get('coach/clients', [CoachDashboardController::class, 'getClients']);
+            Route::get('coach/invoices', [CoachDashboardController::class, 'getInvoices']);
         });
 
         // AI Chat routes (authenticated)
