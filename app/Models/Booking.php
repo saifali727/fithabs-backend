@@ -18,11 +18,13 @@ class Booking extends Model
         'stripe_payment_intent_id',
         'amount',
         'booked_for',
+        'end_time',
     ];
 
     protected $casts = [
         'amount' => 'decimal:2',
         'booked_for' => 'datetime',
+        'end_time' => 'datetime',
     ];
 
     public function user()

@@ -15,7 +15,7 @@ class PaymentController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'service_id' => 'required|exists:services,id',
-            'booked_for' => 'nullable|date',
+            'booked_for' => 'required|date|after:now',
         ]);
 
         if ($validator->fails()) {
@@ -24,6 +24,26 @@ class PaymentController extends Controller
 
         $service = Service::findOrFail($request->service_id);
         $user = $request->user();
+
+        // Calculate timings
+        $startTime = \Carbon\Carbon::parse($request->booked_for);
+        $endTime = $startTime->copy()->addMinutes($service->duration_minutes);
+
+        // Check for conflicts
+        // A conflict exists if (StartA < EndB) and (EndA > StartB)
+        $conflicts = Booking::where('coach_id', $service->coach_id)
+            ->where('status', '!=', 'cancelled')
+            ->where('payment_status', '!=', 'failed') // Don't block for failed payments? Or maybe we should if they are pending? 
+            // Let's block pending and confirmed/paid.
+            ->where(function ($query) use ($startTime, $endTime) {
+                $query->where('booked_for', '<', $endTime)
+                    ->where('end_time', '>', $startTime);
+            })
+            ->exists();
+
+        if ($conflicts) {
+            return response()->json(['error' => 'This time slot is already booked. Please choose another time.'], 409);
+        }
 
         // Calculate amount in cents
         $amount = (int) ($service->price * 100);
@@ -44,6 +64,7 @@ class PaymentController extends Controller
                     'user_id' => $user->id,
                     'service_id' => $service->id,
                     'coach_id' => $service->coach_id,
+                    'booked_for' => $startTime->toIso8601String(),
                 ],
                 'automatic_payment_methods' => [
                     'enabled' => true,
@@ -59,7 +80,8 @@ class PaymentController extends Controller
                 'payment_status' => 'pending',
                 'stripe_payment_intent_id' => $paymentIntent->id,
                 'amount' => $service->price,
-                'booked_for' => $request->booked_for,
+                'booked_for' => $startTime,
+                'end_time' => $endTime,
             ]);
 
             return response()->json([
