@@ -5,18 +5,18 @@ namespace App\Services;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-class GeminiService
+class OpenAIService
 {
     private $apiKey;
-    private $baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+    private $baseUrl = 'https://api.openai.com/v1/chat/completions';
 
     public function __construct()
     {
-        $this->apiKey = env('GEMINI_API_KEY', 'AIzaSyA-ZnF119UrnNcd7UlRhPgtJnkPURk5iyk');
+        $this->apiKey = env('OPENAI_API_KEY');
     }
 
     /**
-     * Send a message to Gemini AI and get response with user context
+     * Send a message to OpenAI and get response with user context
      */
     public function sendMessage(string $message, array $chatHistory = [], array $userContext = [])
     {
@@ -25,75 +25,56 @@ class GeminiService
             $systemInstruction = $this->buildSystemInstruction($userContext);
             
             // Prepare the conversation history
-            $contents = [];
+            $messages = [];
             
+            // Add system message
+            $messages[] = [
+                'role' => 'system',
+                'content' => $systemInstruction
+            ];
+
             // Add chat history
             foreach ($chatHistory as $msg) {
-                $contents[] = [
-                    'role' => $msg['role'] === 'user' ? 'user' : 'model',
-                    'parts' => [['text' => $msg['content']]]
+                $messages[] = [
+                    'role' => $msg['role'] === 'user' ? 'user' : 'assistant',
+                    'content' => $msg['content']
                 ];
             }
             
             // Add current message
-            $contents[] = [
+            $messages[] = [
                 'role' => 'user',
-                'parts' => [['text' => $message]]
-            ];
-
-            $requestData = [
-                'contents' => $contents,
-                'systemInstruction' => [
-                    'parts' => [['text' => $systemInstruction]]
-                ],
-                'generationConfig' => [
-                    'temperature' => 0.7,
-                    'topK' => 40,
-                    'topP' => 0.95,
-                    'maxOutputTokens' => 1024,
-                ],
-                'safetySettings' => [
-                    [
-                        'category' => 'HARM_CATEGORY_HARASSMENT',
-                        'threshold' => 'BLOCK_MEDIUM_AND_ABOVE'
-                    ],
-                    [
-                        'category' => 'HARM_CATEGORY_HATE_SPEECH',
-                        'threshold' => 'BLOCK_MEDIUM_AND_ABOVE'
-                    ],
-                    [
-                        'category' => 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
-                        'threshold' => 'BLOCK_MEDIUM_AND_ABOVE'
-                    ],
-                    [
-                        'category' => 'HARM_CATEGORY_DANGEROUS_CONTENT',
-                        'threshold' => 'BLOCK_MEDIUM_AND_ABOVE'
-                    ]
-                ]
+                'content' => $message
             ];
 
             $response = Http::withHeaders([
                 'Content-Type' => 'application/json',
-            ])->post($this->baseUrl . '?key=' . $this->apiKey, $requestData);
+                'Authorization' => 'Bearer ' . $this->apiKey,
+            ])->post($this->baseUrl, [
+                'model' => 'gpt-4o',
+                'messages' => $messages,
+                'temperature' => 0.7,
+                'max_tokens' => 1024,
+            ]);
 
             if ($response->successful()) {
                 $data = $response->json();
-                if (isset($data['candidates'][0]['content']['parts'][0]['text'])) {
+                if (isset($data['choices'][0]['message']['content'])) {
                     return [
                         'success' => true,
-                        'message' => $data['candidates'][0]['content']['parts'][0]['text']
+                        'message' => $data['choices'][0]['message']['content']
                     ];
                 }
             }
 
-            Log::error('Gemini API Error: ' . $response->body());
+            Log::error('OpenAI API Error: ' . $response->body());
             return [
                 'success' => false,
                 'message' => 'Sorry, I encountered an error. Please try again.'
             ];
 
         } catch (\Exception $e) {
-            Log::error('Gemini Service Error: ' . $e->getMessage());
+            Log::error('OpenAI Service Error: ' . $e->getMessage());
             return [
                 'success' => false,
                 'message' => 'Sorry, I encountered an error. Please try again.'

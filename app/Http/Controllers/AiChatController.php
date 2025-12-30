@@ -4,18 +4,18 @@ namespace App\Http\Controllers;
 
 use App\Models\AiChat;
 use App\Models\AiChatMessage;
-use App\Services\GeminiService;
+use App\Services\OpenAIService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
 class AiChatController extends Controller
 {
-    protected $geminiService;
+    protected $openAIService;
 
-    public function __construct(GeminiService $geminiService)
+    public function __construct(OpenAIService $openAIService)
     {
-        $this->geminiService = $geminiService;
+        $this->openAIService = $openAIService;
     }
 
     /**
@@ -175,14 +175,14 @@ class AiChatController extends Controller
             // Get user context for personalized responses
             $userContext = $this->getUserContext($request->user());
             
-            // Send to Gemini AI with user context
-            $aiResponse = $this->geminiService->sendMessage($message, $chatHistory, $userContext);
+            // Send to OpenAI with user context
+            $aiResponse = $this->openAIService->sendMessage($message, $chatHistory, $userContext);
 
             // Save AI response
             $aiMessage = AiChatMessage::create([
                 'ai_chat_id' => $chat->id,
                 'role' => 'assistant',
-                'content' => $aiResponse['message']
+                'content' => $aiResponse
             ]);
 
             // Update chat title if it's the first message
