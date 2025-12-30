@@ -68,16 +68,25 @@ class OpenAIService
             }
 
             Log::error('OpenAI API Error: ' . $response->body());
+            
+            $debugMessage = 'Sorry, I encountered an error. Please try again.';
+            // Temporary debugging
+            if (empty($this->apiKey)) {
+                 $debugMessage .= ' (Debug: OpenAI API Key is missing)';
+            } else {
+                 $debugMessage .= ' (Debug: API Error ' . $response->status() . ': ' . $response->body() . ')';
+            }
+
             return [
                 'success' => false,
-                'message' => 'Sorry, I encountered an error. Please try again.'
+                'message' => $debugMessage
             ];
 
         } catch (\Exception $e) {
             Log::error('OpenAI Service Error: ' . $e->getMessage());
             return [
                 'success' => false,
-                'message' => 'Sorry, I encountered an error. Please try again.'
+                'message' => 'Sorry, I encountered an error. Please try again. (Debug Exception: ' . $e->getMessage() . ')'
             ];
         }
     }
