@@ -92,7 +92,7 @@ Route::prefix('v1')->group(function () {
 
     // Services (Public)
     Route::get('/coaches/{coach_id}/services', [ServiceController::class, 'index']);
-    Route::get('/services/{service}', [ServiceController::class, 'show']);
+    Route::get('/services/{service}', [ServiceController::class, 'show'])->whereNumber('service');
     Route::get('/coaches/{coach_id}/reviews', [ReviewController::class, 'index']);
 
 
