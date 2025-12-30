@@ -182,7 +182,7 @@ class AiChatController extends Controller
             $aiMessage = AiChatMessage::create([
                 'ai_chat_id' => $chat->id,
                 'role' => 'assistant',
-                'content' => $aiResponse
+                'content' => $aiResponse['message']
             ]);
 
             // Update chat title if it's the first message
