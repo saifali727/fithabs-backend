@@ -29,8 +29,14 @@ class User extends Authenticatable
         'daily_water_goal',
         'dob',
         'phone',
+        'role',
     ];
 
+    /**
+     * The attributes that should be hidden for serialization.
+     *
+     * @var array<int, string>
+     */
     protected $hidden = [
         'password',
         'remember_token',
@@ -43,6 +49,11 @@ class User extends Authenticatable
     ];
 
     // Relationships
+    public function coach()
+    {
+        return $this->hasOne(Coach::class);
+    }
+
     public function dailyActivities()
     {
         return $this->hasMany(DailyActivity::class);

@@ -12,6 +12,7 @@ class Coach extends Authenticatable
     use HasFactory, Notifiable;
 
     protected $fillable = [
+        'user_id',
         'name',
         'email',
         'password',
@@ -22,6 +23,11 @@ class Coach extends Authenticatable
         'phone',
         'is_active',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 
     protected $hidden = [
         'password',

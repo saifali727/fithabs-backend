@@ -121,6 +121,8 @@ class CoachController extends Controller
         }
 
         try {
+            \Illuminate\Support\Facades\DB::beginTransaction();
+
             $profileImageUrl = null;
             
             // Handle image upload if provided
@@ -128,27 +130,41 @@ class CoachController extends Controller
                 $profileImageUrl = $this->handleImageUpload($request->file('profile_image'), 'profile');
             } elseif ($request->has('profile_image') && is_string($request->profile_image)) {
                 $profileImageUrl = $request->profile_image;
-        }
+            }
 
-        $coach = Coach::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'bio' => $request->bio,
+            // Create User account first
+            $user = \App\Models\User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'role' => 'coach',
+                'phone' => $request->phone,
+            ]);
+
+            // Create Coach profile linked to User
+            $coach = Coach::create([
+                'user_id' => $user->id,
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password), // Keeping for backward compatibility temporarily
+                'bio' => $request->bio,
                 'profile_image' => $profileImageUrl,
-            'specializations' => $request->specializations,
-            'certifications' => $request->certifications,
-            'phone' => $request->phone,
-            'is_active' => $request->is_active ?? true,
-        ]);
+                'specializations' => $request->specializations,
+                'certifications' => $request->certifications,
+                'phone' => $request->phone,
+                'is_active' => $request->is_active ?? true,
+            ]);
+
+            \Illuminate\Support\Facades\DB::commit();
 
             return response()->json([
                 'success' => true,
                 'message' => 'Coach created successfully',
-                'data' => $coach,
+                'data' => $coach->load('user'),
             ], 201);
 
         } catch (\Exception $e) {
+            \Illuminate\Support\Facades\DB::rollBack();
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to create coach: ' . $e->getMessage(),
