@@ -104,7 +104,14 @@ class PaymentController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $booking = Booking::where('stripe_payment_intent_id', $request->payment_intent_id)->firstOrFail();
+        $booking = Booking::where('stripe_payment_intent_id', $request->payment_intent_id)->first();
+        
+        if (!$booking) {
+             return response()->json([
+                'error' => 'Booking not found for the provided Payment Intent ID.',
+                'details' => 'Please ensure the booking step was completed successfully.'
+            ], 404);
+        }
 
         $stripeSecret = env('STRIPE_SECRET');
         if (!$stripeSecret) {
@@ -135,17 +142,29 @@ class PaymentController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $query = $user->bookings();
+        
+        // Determine role configuration
+        $isCoach = false;
+        
+        if ($user instanceof \App\Models\Coach) {
+            $isCoach = true;
+        } elseif ($user instanceof \App\Models\User && $user->role === 'coach') {
+            $isCoach = true;
+            // The user object is a User, but we might need the Coach ID for querying
+            // However, the relationship is user->coach, so $user->coach->id would be the coach_id
+            $coachProfile = $user->coach;
+        }
 
-        // If user is a typical User, show coach details.
-        // If user is a Coach, show user (client) details.
-        if ($user instanceof \App\Models\User) {
-            $query->with(['coach', 'service']);
-        } elseif ($user instanceof \App\Models\Coach) {
-            $query->with(['user', 'service']);
+        if ($isCoach) {
+             if (isset($coachProfile)) {
+                 $query = Booking::where('coach_id', $coachProfile->id);
+             } else {
+                 $query = $user->bookings(); // This works if user is instance of Coach model
+             }
+             $query->with(['user', 'service']);
         } else {
-            // Fallback for other types
-            $query->with(['coach', 'service']);
+            // Client
+            $query = $user->bookings()->with(['coach', 'service']);
         }
 
         $bookings = $query->orderBy('created_at', 'desc')->paginate(10);
@@ -159,11 +178,23 @@ class PaymentController extends Controller
 
         // Authorization: User who made it OR Coach receiving it can cancel
 
+        // Authorization: User who made it OR Coach receiving it can cancel
         $isAuthorized = false;
-        if ($user instanceof \App\Models\User && $booking->user_id === $user->id) {
-            $isAuthorized = true;
-        } elseif ($user instanceof \App\Models\Coach && $booking->coach_id === $user->id) {
-            $isAuthorized = true;
+
+        if ($user instanceof \App\Models\User) {
+            // Check if user is the client
+            if ($booking->user_id === $user->id) {
+                $isAuthorized = true;
+            } 
+            // Check if user is the coach (via role)
+            elseif ($user->role === 'coach' && $user->coach && $booking->coach_id === $user->coach->id) {
+                $isAuthorized = true;
+            }
+        } elseif ($user instanceof \App\Models\Coach) {
+            // Legacy Coach model check
+            if ($booking->coach_id === $user->id) {
+                $isAuthorized = true;
+            }
         }
 
         if (!$isAuthorized) {
