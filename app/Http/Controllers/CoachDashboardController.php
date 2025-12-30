@@ -14,11 +14,18 @@ class CoachDashboardController extends Controller
      */
     public function getStats(Request $request)
     {
-        $coach = $request->user();
+        $user = $request->user();
+        $coach = null;
+
+        if ($user instanceof \App\Models\Coach) {
+            $coach = $user;
+        } elseif ($user instanceof \App\Models\User && $user->role === 'coach') {
+            $coach = $user->coach;
+        }
 
         // Ensure user is allowed
-        if (!($coach instanceof \App\Models\Coach)) {
-            return response()->json(['error' => 'Unauthorized'], 403);
+        if (!$coach) {
+            return response()->json(['error' => 'Unauthorized - Coach profile not found'], 403);
         }
 
         $bookings = $coach->bookings();
@@ -60,7 +67,18 @@ class CoachDashboardController extends Controller
      */
     public function getClients(Request $request)
     {
-        $coach = $request->user();
+        $user = $request->user();
+        $coach = null;
+
+        if ($user instanceof \App\Models\Coach) {
+            $coach = $user;
+        } elseif ($user instanceof \App\Models\User && $user->role === 'coach') {
+            $coach = $user->coach;
+        }
+
+        if (!$coach) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
 
         // Get unique users who have booked this coach
         // We'll group by user_id to aggregate stats per user
@@ -96,7 +114,18 @@ class CoachDashboardController extends Controller
      */
     public function getInvoices(Request $request)
     {
-        $coach = $request->user();
+        $user = $request->user();
+        $coach = null;
+
+        if ($user instanceof \App\Models\Coach) {
+            $coach = $user;
+        } elseif ($user instanceof \App\Models\User && $user->role === 'coach') {
+            $coach = $user->coach;
+        }
+
+        if (!$coach) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
 
         $invoices = $coach->bookings()
             ->with(['user', 'service'])

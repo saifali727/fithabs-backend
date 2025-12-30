@@ -42,13 +42,19 @@ class ServiceController extends Controller
     public function myServices(Request $request)
     {
         $user = $request->user();
+        $coach = null;
 
-        // Ensure the user has a services relationship
-        if (!method_exists($user, 'services')) {
+        if ($user instanceof \App\Models\Coach) {
+            $coach = $user;
+        } elseif ($user instanceof \App\Models\User && $user->role === 'coach') {
+            $coach = $user->coach;
+        }
+
+        if (!$coach) {
             return response()->json(['error' => 'Unauthorized. Only coaches can access this.'], 403);
         }
 
-        $services = $user->services()->orderBy('created_at', 'desc')->get();
+        $services = $coach->services()->orderBy('created_at', 'desc')->get();
         return response()->json(['data' => $services]);
     }
 
@@ -58,8 +64,16 @@ class ServiceController extends Controller
     public function store(Request $request)
     {
         $user = $request->user();
-        $isCoach = $user instanceof Coach || method_exists($user, 'services'); // Check for services relationship
+        $coach = null;
 
+        if ($user instanceof \App\Models\Coach) {
+            $coach = $user;
+        } elseif ($user instanceof \App\Models\User && $user->role === 'coach') {
+            $coach = $user->coach;
+        }
+
+        $isCoach = !is_null($coach);
+        
         $validator = Validator::make($request->all(), [
             'coach_id' => $isCoach ? 'nullable|exists:coaches,id' : 'required|exists:coaches,id',
             'title' => 'required|string|max:255',
@@ -77,7 +91,7 @@ class ServiceController extends Controller
 
         // If authenticated user is a coach and no coach_id provided, default to self
         if (!isset($data['coach_id']) && $isCoach) {
-            $data['coach_id'] = $user->id;
+            $data['coach_id'] = $coach->id;
         }
 
         $service = Service::create($data);
