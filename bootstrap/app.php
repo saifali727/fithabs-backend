@@ -12,7 +12,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        $middleware->alias([
+            'professional.access' => \App\Http\Middleware\ProfessionalAccess::class,
+            'validate.json' => \App\Http\Middleware\ValidateJsonFields::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

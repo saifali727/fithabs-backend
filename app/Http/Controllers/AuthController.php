@@ -72,6 +72,15 @@ class AuthController extends Controller
         }
 
         $user = Auth::user();
+
+        // Prevent professionals from logging in via the standard user/client endpoint
+        if (in_array($user->role, ['coach', 'therapist'])) {
+            return response()->json([
+                'error' => 'Access denied. Professionals must login via the Partner Portal.',
+                'role' => $user->role
+            ], 403);
+        }
+
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json(['user' => $user, 'token' => $token], 200);
