@@ -80,7 +80,7 @@ class AuthController extends Controller
     public function adminLogin(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'email' => 'required|string|email|exists:admin_users,email',
+            'email' => 'required|string|email',
             'password' => 'required|string',
         ]);
 
@@ -90,14 +90,54 @@ class AuthController extends Controller
                 'errors' => $validator->errors()
             ], 422);
         }
-        $user = AdminUser::where('email', $request->email)->first();
-        if (!$user || !Hash::check($request->password, $user->password)) {
-            return response()->json(['error' => 'Invalid credentials'], 401);
-        }
-       
-        $token = $user->createToken('auth_token')->plainTextToken;
 
-        return response()->json(['user' => $user, 'token' => $token], 200);
+        // Try to authenticate as AdminUser first
+        $adminUser = AdminUser::where('email', $request->email)->first();
+        if ($adminUser && Hash::check($request->password, $adminUser->password)) {
+            $token = $adminUser->createToken('admin_token')->plainTextToken;
+            return response()->json([
+                'user' => $adminUser, 
+                'token' => $token,
+                'role' => $adminUser->role
+            ], 200);
+        }
+
+        // If not admin, try to authenticate as a Coach (User with coach role)
+        // We look up the User table because that's where auth credentials are now stored for coaches
+        $user = User::where('email', $request->email)->first();
+        
+        if ($user && Hash::check($request->password, $user->password)) {
+            // Check if user has coach role
+            if ($user->role === 'coach') {
+                // Ensure the coach profile is active
+                $coach = $user->coach;
+                if (!$coach || !$coach->is_active) {
+                    return response()->json(['error' => 'Account is inactive'], 403);
+                }
+
+                $token = $user->createToken('coach_token')->plainTextToken;
+                return response()->json([
+                    'user' => $user,
+                    'coach_profile' => $coach,
+                    'token' => $token,
+                    'role' => 'coach'
+                ], 200);
+            }
+        }
+
+        // Backward compatibility: Check old Coach table directly (if they haven't been migrated to User table yet)
+        $legacyCoach = \App\Models\Coach::where('email', $request->email)->first();
+        if ($legacyCoach && !$legacyCoach->user_id && Hash::check($request->password, $legacyCoach->password)) {
+             if (!$legacyCoach->is_active) {
+                return response()->json(['error' => 'Account is inactive'], 403);
+            }
+            // We can't issue a standard Sanctum token easily without a User model, 
+            // but if you have a custom auth guard for coaches you would use it here.
+            // For now, assuming we want to move everyone to User table.
+            return response()->json(['error' => 'Please contact support to migrate your account.'], 403);
+        }
+
+        return response()->json(['error' => 'Invalid credentials'], 401);
     }
 
     /**
