@@ -12,17 +12,19 @@ class ServiceController extends Controller
     /**
      * Display a listing of the services for a specific coach.
      */
-    public function index(Request $request)
+    public function index(Request $request, $coach_id = null)
     {
-        if ($request->has('coach_id')) {
-            $services = Service::where('coach_id', $request->coach_id)
+        // Prioritize coach_id from URL parameter, then fall back to request input
+        $coachId = $coach_id ?? $request->input('coach_id');
+
+        if ($coachId) {
+            $services = Service::where('coach_id', $coachId)
                 ->where('is_active', true)
                 ->get();
             return response()->json(['data' => $services]);
         }
 
-        // Return all active services if no coach specified? Or error?
-        // Let's return all for now or paginated
+        // Return all active services if no coach specified
         $services = Service::where('is_active', true)->paginate(20);
         return response()->json($services);
     }
