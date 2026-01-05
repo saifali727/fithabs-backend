@@ -28,6 +28,11 @@ class UserFavoriteController extends Controller
             $transformedFavorites = $favorites->map(function ($favorite) {
                 $item = $favorite->favoritable;
                 
+                // Skip if the favorited item no longer exists
+                if (!$item) {
+                    return null;
+                }
+                
                 if ($favorite->favoritable_type === 'workout') {
                     // Load exercises for workout
                     $item->load(['exercises' => function($q) {
@@ -69,7 +74,7 @@ class UserFavoriteController extends Controller
                         'created_at' => $favorite->created_at,
                     ];
                 }
-            });
+            })->filter();
 
             return response()->json([
                 'status' => 'success',
