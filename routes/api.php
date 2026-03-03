@@ -676,6 +676,8 @@ Route::prefix('v1')->group(function () {
     // Content creation routes (restricted to editor or super_admin)
     Route::middleware(['auth:sanctum'])->group(function () {
         Route::apiResource('exercises', ExerciseController::class);
+        // POST alias for update to support multipart/form-data file uploads (PHP doesn't populate $_FILES on PUT)
+        Route::post('exercises/{exercise}', [ExerciseController::class, 'update']);
         Route::get('workouts/{workout}/exercises', [ExerciseController::class, 'getWorkoutExercises']);
         Route::post('exercises/debug-upload', [ExerciseController::class, 'debugUpload']);
         Route::post('exercises/simple-upload-test', [ExerciseController::class, 'simpleUploadTest']);
