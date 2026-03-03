@@ -245,12 +245,13 @@ class ExerciseController extends Controller
         try {
             $exercise = Exercise::findOrFail($id);
 
-            $validator = Validator::make($request->all(), [
+            // Exclude file fields from validator to avoid Laravel's restrictive file validation
+            $validationData = $request->except(['video', 'image']);
+
+            $validator = Validator::make($validationData, [
                 'workout_id' => 'sometimes|exists:workouts,id',
                 'name' => 'sometimes|string|max:255',
                 'instructions' => 'nullable|string',
-                'video' => 'nullable|file|mimes:mp4,avi,mov,wmv,flv,webm', // Remove max size validation
-                'image' => 'nullable|file|mimes:jpeg,png,jpg,gif,webp', // Remove max size validation
                 'video_url' => 'nullable|string|url',
                 'image_url' => 'nullable|string',
                 'duration_seconds' => 'nullable|integer|min:0',
@@ -279,34 +280,127 @@ class ExerciseController extends Controller
                 'order'
             ]);
 
-            // Handle image upload
+            // Handle image upload with comprehensive validation
             if ($request->hasFile('image')) {
-                // Delete old image if exists
-                if ($exercise->image_url) {
-                    $oldImagePath = str_replace('/storage/', '', $exercise->image_url);
-                    Storage::disk('public')->delete($oldImagePath);
-                }
+                try {
+                    $imageFile = $request->file('image');
 
-                $imageFile = $request->file('image');
-                $imageName = 'exercise_' . time() . '_' . Str::random(10) . '.' . $imageFile->getClientOriginalExtension();
-                $imagePath = $imageFile->storeAs('exercises/images', $imageName, 'public');
-                $data['image_url'] = request()->getSchemeAndHttpHost() . Storage::url($imagePath);
+                    $allowedImageTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/webp'];
+                    $allowedImageExtensions = ['jpeg', 'png', 'jpg', 'gif', 'webp'];
+
+                    if ($imageFile->getSize() <= 0) {
+                        return response()->json([
+                            'status' => 'error',
+                            'message' => 'Image upload failed',
+                            'error' => 'Image file is empty or corrupted'
+                        ], 422);
+                    }
+
+                    $maxImageSize = 10485760; // 10MB
+                    if ($imageFile->getSize() > $maxImageSize) {
+                        return response()->json([
+                            'status' => 'error',
+                            'message' => 'Image upload failed',
+                            'error' => 'Image file is too large. Maximum size: 10MB'
+                        ], 422);
+                    }
+
+                    $mimeType = $imageFile->getMimeType();
+                    if (!in_array($mimeType, $allowedImageTypes)) {
+                        return response()->json([
+                            'status' => 'error',
+                            'message' => 'Image upload failed',
+                            'error' => 'Invalid image file type. Allowed: ' . implode(', ', $allowedImageExtensions)
+                        ], 422);
+                    }
+
+                    $extension = strtolower($imageFile->getClientOriginalExtension());
+                    if (!in_array($extension, $allowedImageExtensions)) {
+                        return response()->json([
+                            'status' => 'error',
+                            'message' => 'Image upload failed',
+                            'error' => 'Invalid image file extension. Allowed: ' . implode(', ', $allowedImageExtensions)
+                        ], 422);
+                    }
+
+                    // Delete old image if exists
+                    if ($exercise->image_url) {
+                        $oldImagePath = str_replace('/storage/', '', parse_url($exercise->image_url, PHP_URL_PATH));
+                        Storage::disk('public')->delete($oldImagePath);
+                    }
+
+                    $imageName = 'exercise_' . time() . '_' . Str::random(10) . '.' . $extension;
+                    $imagePath = $imageFile->storeAs('exercises/images', $imageName, 'public');
+
+                    if (!$imagePath) {
+                        return response()->json([
+                            'status' => 'error',
+                            'message' => 'Failed to store image file',
+                            'error' => 'Storage error - check directory permissions'
+                        ], 500);
+                    }
+
+                    $data['image_url'] = request()->getSchemeAndHttpHost() . Storage::url($imagePath);
+                } catch (\Exception $e) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Image upload failed',
+                        'error' => $e->getMessage()
+                    ], 422);
+                }
             } elseif ($request->has('image_url')) {
                 $data['image_url'] = $request->input('image_url');
             }
 
-            // Handle video upload
+            // Handle video upload - accepts any video file type
             if ($request->hasFile('video')) {
-                // Delete old video if exists
-                if ($exercise->video_url) {
-                    $oldVideoPath = str_replace('/storage/', '', $exercise->video_url);
-                    Storage::disk('public')->delete($oldVideoPath);
-                }
+                try {
+                    $videoFile = $request->file('video');
 
-                $videoFile = $request->file('video');
-                $videoName = 'exercise_' . time() . '_' . Str::random(10) . '.' . $videoFile->getClientOriginalExtension();
-                $videoPath = $videoFile->storeAs('exercises/videos', $videoName, 'public');
-                $data['video_url'] = request()->getSchemeAndHttpHost() . Storage::url($videoPath);
+                    if ($videoFile->getSize() <= 0) {
+                        return response()->json([
+                            'status' => 'error',
+                            'message' => 'Video upload failed',
+                            'error' => 'Video file is empty or corrupted'
+                        ], 422);
+                    }
+
+                    $maxVideoSize = 104857600; // 100MB
+                    if ($videoFile->getSize() > $maxVideoSize) {
+                        return response()->json([
+                            'status' => 'error',
+                            'message' => 'Video upload failed',
+                            'error' => 'Video file is too large. Maximum size: 100MB'
+                        ], 422);
+                    }
+
+                    // Delete old video if exists
+                    if ($exercise->video_url) {
+                        $oldVideoPath = str_replace('/storage/', '', parse_url($exercise->video_url, PHP_URL_PATH));
+                        Storage::disk('public')->delete($oldVideoPath);
+                    }
+
+                    // Accept any extension - no MIME restriction
+                    $extension = strtolower($videoFile->getClientOriginalExtension()) ?: 'mp4';
+                    $videoName = 'exercise_' . time() . '_' . Str::random(10) . '.' . $extension;
+                    $videoPath = $videoFile->storeAs('exercises/videos', $videoName, 'public');
+
+                    if (!$videoPath) {
+                        return response()->json([
+                            'status' => 'error',
+                            'message' => 'Failed to store video file',
+                            'error' => 'Storage error - check directory permissions'
+                        ], 500);
+                    }
+
+                    $data['video_url'] = request()->getSchemeAndHttpHost() . Storage::url($videoPath);
+                } catch (\Exception $e) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Video upload failed',
+                        'error' => $e->getMessage()
+                    ], 422);
+                }
             } elseif ($request->has('video_url')) {
                 $data['video_url'] = $request->input('video_url');
             }
